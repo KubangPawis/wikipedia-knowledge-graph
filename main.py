@@ -1,16 +1,20 @@
 from bs4 import BeautifulSoup
+import pandas as pd
 import requests
 import time
 import random
 
-def get_page_details(page_url):
+wiki_nodes_df = pd.DataFrame(columns=['page_title', 'url', 'last_modified', 'categories'])
+
+def get_page_details(nodes_table, page_url):
     url_page_response = requests.get(page_url)
 
     # Page Title, URL
     wiki_page_soup = BeautifulSoup(url_page_response.text, 'lxml')
     page_title = wiki_page_soup.title.text
+    wiki_page_url = url_page_response.url
     print(f'Page Title: {page_title}')
-    print(f'Page URL: {url_page_response.url}')
+    print(f'Page URL: {wiki_page_url}')
 
     # Page Categories
     cat_container = wiki_page_soup.find('div', id='mw-normal-catlinks', class_='mw-normal-catlinks')
@@ -31,6 +35,18 @@ def get_page_details(page_url):
 
     print(f'Latest Date: {latest_date}')
 
+    # Data Dictionary
+    new_page_data = {
+        'page_title': page_title,
+        'url': wiki_page_url,
+        'categories': categories,
+        'last_modified': latest_date,
+    }
+
+    # Append current page metadata to Page Node Table
+    nodes_table = pd.concat([nodes_table, pd.DataFrame([new_page_data])], ignore_index=True)
+    print(nodes_table)
+
 def filter_target_headings(target_headings):
     filtered_arr = []
     for heading in target_headings:
@@ -45,7 +61,7 @@ def main():
     soup = BeautifulSoup(start_url_response.text, 'lxml')
     
     # Extract current page metadata
-    get_page_details(start_url)
+    get_page_details(wiki_nodes_df, start_url)
 
     # Main content area
     wikipage_content = soup.find('div', id='mw-content-text')
