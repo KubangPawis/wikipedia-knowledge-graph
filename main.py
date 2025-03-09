@@ -34,7 +34,14 @@ def main():
         for sibling in heading.find_next_siblings():
             if 'mw-heading2' in sibling.get('class', []):
                 break
-            print(sibling.text)
+
+            # Get all <a> tags in each sibling (exclude citation <a> tags)
+            rel_content = [(a.text.strip(), a['href']) for a in sibling.find_all('a') 
+                           if 'href' in a.attrs
+                           and a.text.strip()
+                           and not a['href'].startswith('#cite')]
+            print(rel_content)
+
             time.sleep(random.uniform(1, 3))
 
 if __name__ == '__main__':
