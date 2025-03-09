@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
+import time
+import random
 
 def filter_target_headings(target_headings):
     filtered_arr = []
@@ -23,6 +25,17 @@ def main():
     
     for heading in target_headings:
         print(heading.text)
+
+    # Get all <p> tag siblings next to the target_headings
+    for heading in target_headings:
+        print(f'\n{heading.text}\n')
+
+        # Terminate if current sibling is not a part of the current heading
+        for sibling in heading.find_next_siblings():
+            if 'mw-heading2' in sibling.get('class', []):
+                break
+            print(sibling.text)
+            time.sleep(random.uniform(1, 3))
 
 if __name__ == '__main__':
     main()
