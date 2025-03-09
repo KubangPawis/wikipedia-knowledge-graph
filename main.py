@@ -12,6 +12,13 @@ def get_page_details(page_url):
     print(f'Page Title: {page_title}')
     print(f'Page URL: {url_page_response.url}')
 
+    # Page Categories
+    cat_container = wiki_page_soup.find('div', id='mw-normal-catlinks', class_='mw-normal-catlinks')
+    categories = [cat.text for cat in cat_container.find_all('a') 
+                  if cat['title'].startswith('Category:')]
+    
+    print('Page Categories:', ', '.join(categories))
+
     # Page Latest Change - History
     page_url_title = page_url.split('/')[-1]
     url_history_response = requests.get(f'https://en.wikipedia.org/w/index.php?title={page_url_title}&action=history')
