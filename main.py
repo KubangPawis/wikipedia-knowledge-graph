@@ -124,5 +124,9 @@ def main():
     print(wiki_nodes_df)
     print(wiki_edges_df)
 
+    # Export extracted data to CSV
+    wiki_nodes_df.to_csv('./extracted_data/wiki_nodes.csv', index=False)
+    wiki_edges_df.to_csv('./extracted_data/wiki_edges.csv', index=False)
+
 if __name__ == '__main__':
     main()
