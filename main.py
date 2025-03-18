@@ -5,6 +5,7 @@ import time
 import random
 
 wiki_nodes_df = pd.DataFrame(columns=['page_title', 'url', 'last_modified', 'categories'])
+wiki_edges_df = pd.DataFrame(columns=['source', 'target'])
 
 def get_page_details(nodes_table, page_url):
     url_page_response = requests.get(page_url)
@@ -47,6 +48,8 @@ def get_page_details(nodes_table, page_url):
     nodes_table = pd.concat([nodes_table, pd.DataFrame([new_page_data])], ignore_index=True)
     print(nodes_table)
 
+    return nodes_table
+
 def filter_target_headings(target_headings):
     filtered_arr = []
     for heading in target_headings:
@@ -56,40 +59,70 @@ def filter_target_headings(target_headings):
     return filtered_arr
 
 def main():
+    global wiki_nodes_df
+    global wiki_edges_df
+
     start_url = 'https://en.wikipedia.org/wiki/Artificial_intelligence'
     start_url_response = requests.get(start_url)
-    soup = BeautifulSoup(start_url_response.text, 'lxml')
-    
-    # Extract current page metadata
-    get_page_details(wiki_nodes_df, start_url)
 
-    # Main content area
-    wikipage_content = soup.find('div', id='mw-content-text')
+    current_url = start_url
+    current_url_response = start_url_response    
 
-    # Get only content-based headings
-    page_headings = wikipage_content.find_all('div', class_='mw-heading2')
-    target_headings = filter_target_headings(page_headings)
-    
-    for heading in target_headings:
-        print(heading.text)
+    while len(wiki_nodes_df) < 10:
+        soup = BeautifulSoup(current_url_response.text, 'lxml')
 
-    # Get all <p> tag siblings next to the target_headings
-    for heading in target_headings:
-        print(f'\n{heading.text}\n')
+        # Extract current page metadata
+        wiki_nodes_df = get_page_details(wiki_nodes_df, current_url)
 
-        # Terminate if current sibling is not a part of the current heading
-        for sibling in heading.find_next_siblings():
-            if 'mw-heading2' in sibling.get('class', []):
-                break
+        # Main content area
+        wikipage_content = soup.find('div', id='mw-content-text')
 
-            # Get all <a> tags in each sibling (exclude citation <a> tags)
-            rel_content = [(a.text.strip(), a['href']) for a in sibling.find_all('a') 
-                           if 'href' in a.attrs
-                           and a.text.strip()
-                           and not a['href'].startswith('#cite')]
-            print(rel_content)
+        # Get only content-based headings
+        page_headings = wikipage_content.find_all('div', class_='mw-heading2')
+        target_headings = filter_target_headings(page_headings)
+        
+        for heading in target_headings:
+            print(heading.text)
 
-            time.sleep(random.uniform(1, 3))
+        # Get all <p> tag siblings next to the target_headings
+        for heading in target_headings:
+            print(f'\n{heading.text}\n')
+
+            # Terminate if current sibling is not a part of the current heading
+            for sibling in heading.find_next_siblings():
+                if 'mw-heading2' in sibling.get('class', []):
+                    break
+
+                # Get all <a> tags in each sibling (exclude citation <a> tags)
+                rel_content = [(a.text.strip(), a['href']) for a in sibling.find_all('a') 
+                            if 'href' in a.attrs
+                            and a.text.strip()
+                            and not a['href'].startswith('#cite')]
+                print(rel_content)
+
+                # Add visible <a> tags to edge table
+                for link in rel_content:
+                    if link[1].startswith('/wiki/'):
+                        new_edge_data = {
+                            'source': current_url,
+                            'target': f'https://en.wikipedia.org{link[1]}',
+                        }
+                        wiki_edges_df = pd.concat([wiki_edges_df, pd.DataFrame([new_edge_data])], ignore_index=True)
+                        print(wiki_edges_df)
+
+                # TEMP TERMINATOR
+                if len(wiki_edges_df[wiki_edges_df['source'] == current_url]) >= 10:
+                    break
+
+                time.sleep(random.uniform(1, 3))
+
+        # Reassign current URL to the next available URL
+        current_url = wiki_edges_df[(wiki_edges_df['source'] == current_url) & (~wiki_edges_df['target'].isin(wiki_nodes_df['url']))].iloc[0]['target']
+        print(f'[DEBUG] Next URL: {current_url}')
+        current_url_response = requests.get(current_url)
+
+    print(wiki_nodes_df)
+    print(wiki_edges_df)
 
 if __name__ == '__main__':
     main()
