@@ -117,7 +117,16 @@ def main():
                 time.sleep(random.uniform(1, 3))
 
         # Reassign current URL to the next available URL
-        current_url = wiki_edges_df[(wiki_edges_df['source'] == current_url) & (~wiki_edges_df['target'].isin(wiki_nodes_df['url']))].iloc[0]['target']
+        unvisited_pages = wiki_edges_df.loc[(~wiki_edges_df['target'].isin(wiki_nodes_df['url'])), 'target']
+        print('UNVISITED PAGES:')
+        print(unvisited_pages)
+
+        if not unvisited_pages.empty:
+            current_url = unvisited_pages.iloc[0]
+        else:
+            print('No more unvisited pages. Stopping the crawl.')
+            break
+
         print(f'[DEBUG] Next URL: {current_url}')
         current_url_response = requests.get(current_url)
 
