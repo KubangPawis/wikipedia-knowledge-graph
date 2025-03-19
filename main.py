@@ -102,6 +102,19 @@ def main():
 
                 # Add visible <a> tags to edge table
                 for link in rel_content:
+
+                    # Skip disallowed pages(check on robots.txt)
+                    if link[1].startswith('/w/') \
+                        or link[1].startswith('/api/') \
+                        or link[1].startswith('/trap/') \
+                        or link[1].startswith('/wiki/Special:') \
+                        or link[1].startswith('/wiki/Spezial:') \
+                        or link[1].startswith('/wiki/Spesial:') \
+                        or link[1].startswith('/wiki/Special%3A') \
+                        or link[1].startswith('/wiki/Spezial%3A:') \
+                        or link[1].startswith('/wiki/Spesial%3A') :
+                        continue
+
                     if link[1].startswith('/wiki/'):
                         new_edge_data = {
                             'source': current_url,
