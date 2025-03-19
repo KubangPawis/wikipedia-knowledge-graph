@@ -68,7 +68,7 @@ def main():
     current_url = start_url
     current_url_response = start_url_response    
 
-    while len(wiki_nodes_df) < 10:
+    while len(wiki_nodes_df) < 500:
         soup = BeautifulSoup(current_url_response.text, 'lxml')
 
         # Extract current page metadata
@@ -122,10 +122,6 @@ def main():
                         }
                         wiki_edges_df = pd.concat([wiki_edges_df, pd.DataFrame([new_edge_data])], ignore_index=True)
                         print(wiki_edges_df)
-
-                # TEMP TERMINATOR
-                if len(wiki_edges_df[wiki_edges_df['source'] == current_url]) >= 10:
-                    break
 
                 time.sleep(random.uniform(1, 3))
 
