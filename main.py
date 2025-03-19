@@ -12,7 +12,7 @@ def get_page_details(nodes_table, page_url):
 
     # Page Title, URL
     wiki_page_soup = BeautifulSoup(url_page_response.text, 'lxml')
-    page_title = wiki_page_soup.title.text
+    page_title = wiki_page_soup.title.text.removesuffix(' - Wikipedia')
     wiki_page_url = url_page_response.url
     print(f'Page Title: {page_title}')
     print(f'Page URL: {wiki_page_url}')
