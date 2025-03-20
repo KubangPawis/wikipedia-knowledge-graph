@@ -58,7 +58,7 @@ def filter_target_headings(target_headings):
         filtered_arr.append(heading)
     return filtered_arr
 
-def main():
+def scrape_wikipedia():
     global wiki_nodes_df
     global wiki_edges_df
 
@@ -68,7 +68,7 @@ def main():
     current_url = start_url
     current_url_response = start_url_response    
 
-    while len(wiki_nodes_df) < 10:
+    while len(wiki_nodes_df) < 100:
         try:
             soup = BeautifulSoup(current_url_response.text, 'lxml')
 
@@ -146,9 +146,13 @@ def main():
     print(wiki_nodes_df)
     print(wiki_edges_df)
 
-    # Export extracted data to CSV
-    wiki_nodes_df.to_csv('./extracted_data/wiki_nodes.csv', index=False)
-    wiki_edges_df.to_csv('./extracted_data/wiki_edges.csv', index=False)
+    # # Export extracted data to CSV
+    # wiki_nodes_df.to_csv('./extracted_data/wiki_nodes.csv', index=False)
+    # wiki_edges_df.to_csv('./extracted_data/wiki_edges.csv', index=False)
+
+    # [TESTING] Export extracted data to CSV
+    wiki_nodes_df.to_csv('./extracted_data/wiki_nodes1.csv', index=False)
+    wiki_edges_df.to_csv('./extracted_data/wiki_edges1.csv', index=False)
 
 if __name__ == '__main__':
-    main()
+    scrape_wikipedia()

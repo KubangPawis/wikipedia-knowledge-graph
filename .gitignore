@@ -1,1 +1,33 @@
-/venv
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+.env/
+
+# Docker
+*.log
+*.pid
+*.sock
+.dockerignore
+Dockerfile*
+
+# Airflow logs and database
+airflow.db
+*.sqlite
+logs/
+.airflow/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Sensitive Data (example)
+.env
+config.json
