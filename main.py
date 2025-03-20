@@ -68,76 +68,80 @@ def main():
     current_url = start_url
     current_url_response = start_url_response    
 
-    while len(wiki_nodes_df) < 500:
-        soup = BeautifulSoup(current_url_response.text, 'lxml')
+    while len(wiki_nodes_df) < 10:
+        try:
+            soup = BeautifulSoup(current_url_response.text, 'lxml')
 
-        # Extract current page metadata
-        wiki_nodes_df = get_page_details(wiki_nodes_df, current_url)
+            # Extract current page metadata
+            wiki_nodes_df = get_page_details(wiki_nodes_df, current_url)
 
-        # Main content area
-        wikipage_content = soup.find('div', id='mw-content-text')
+            # Main content area
+            wikipage_content = soup.find('div', id='mw-content-text')
 
-        # Get only content-based headings
-        page_headings = wikipage_content.find_all('div', class_='mw-heading2')
-        target_headings = filter_target_headings(page_headings)
-        
-        for heading in target_headings:
-            print(heading.text)
+            # Get only content-based headings
+            page_headings = wikipage_content.find_all('div', class_='mw-heading2')
+            target_headings = filter_target_headings(page_headings)
+            
+            for heading in target_headings:
+                print(heading.text)
 
-        # Get all <p> tag siblings next to the target_headings
-        for heading in target_headings:
-            print(f'\n{heading.text}\n')
+            # Get all <p> tag siblings next to the target_headings
+            for heading in target_headings:
+                print(f'\n{heading.text}\n')
 
-            # Terminate if current sibling is not a part of the current heading
-            for sibling in heading.find_next_siblings():
-                if 'mw-heading2' in sibling.get('class', []):
-                    break
+                # Terminate if current sibling is not a part of the current heading
+                for sibling in heading.find_next_siblings():
+                    if 'mw-heading2' in sibling.get('class', []):
+                        break
 
-                # Get all <a> tags in each sibling (exclude citation <a> tags)
-                rel_content = [(a.text.strip(), a['href']) for a in sibling.find_all('a') 
-                            if 'href' in a.attrs
-                            and a.text.strip()
-                            and not a['href'].startswith('#cite')]
-                print(rel_content)
+                    # Get all <a> tags in each sibling (exclude citation <a> tags)
+                    rel_content = [(a.text.strip(), a['href']) for a in sibling.find_all('a') 
+                                if 'href' in a.attrs
+                                and a.text.strip()
+                                and not a['href'].startswith('#cite')]
+                    print(rel_content)
 
-                # Add visible <a> tags to edge table
-                for link in rel_content:
+                    # Add visible <a> tags to edge table
+                    for link in rel_content:
 
-                    # Skip disallowed pages(check on robots.txt)
-                    if link[1].startswith('/w/') \
-                        or link[1].startswith('/api/') \
-                        or link[1].startswith('/trap/') \
-                        or link[1].startswith('/wiki/Special:') \
-                        or link[1].startswith('/wiki/Spezial:') \
-                        or link[1].startswith('/wiki/Spesial:') \
-                        or link[1].startswith('/wiki/Special%3A') \
-                        or link[1].startswith('/wiki/Spezial%3A:') \
-                        or link[1].startswith('/wiki/Spesial%3A') :
-                        continue
+                        # Skip disallowed pages(check on robots.txt)
+                        if link[1].startswith('/w/') \
+                            or link[1].startswith('/api/') \
+                            or link[1].startswith('/trap/') \
+                            or link[1].startswith('/wiki/Special:') \
+                            or link[1].startswith('/wiki/Spezial:') \
+                            or link[1].startswith('/wiki/Spesial:') \
+                            or link[1].startswith('/wiki/Special%3A') \
+                            or link[1].startswith('/wiki/Spezial%3A:') \
+                            or link[1].startswith('/wiki/Spesial%3A') :
+                            continue
 
-                    if link[1].startswith('/wiki/'):
-                        new_edge_data = {
-                            'source': current_url,
-                            'target': f'https://en.wikipedia.org{link[1]}',
-                        }
-                        wiki_edges_df = pd.concat([wiki_edges_df, pd.DataFrame([new_edge_data])], ignore_index=True)
-                        print(wiki_edges_df)
+                        if link[1].startswith('/wiki/'):
+                            new_edge_data = {
+                                'source': current_url,
+                                'target': f'https://en.wikipedia.org{link[1]}',
+                            }
+                            wiki_edges_df = pd.concat([wiki_edges_df, pd.DataFrame([new_edge_data])], ignore_index=True)
+                            print(wiki_edges_df)
 
-                time.sleep(random.uniform(1, 3))
+                    time.sleep(random.uniform(1, 3))
 
-        # Reassign current URL to the next available URL
-        unvisited_pages = wiki_edges_df.loc[(~wiki_edges_df['target'].isin(wiki_nodes_df['url'])), 'target']
-        print('UNVISITED PAGES:')
-        print(unvisited_pages)
+            # Reassign current URL to the next available URL
+            unvisited_pages = wiki_edges_df.loc[(~wiki_edges_df['target'].isin(wiki_nodes_df['url'])), 'target']
+            print('UNVISITED PAGES:')
+            print(unvisited_pages)
 
-        if not unvisited_pages.empty:
-            current_url = unvisited_pages.iloc[0]
-        else:
-            print('No more unvisited pages. Stopping the crawl.')
-            break
+            if not unvisited_pages.empty:
+                current_url = unvisited_pages.iloc[0]
+            else:
+                print('No more unvisited pages. Stopping the crawl.')
+                break
 
-        print(f'[DEBUG] Next URL: {current_url}')
-        current_url_response = requests.get(current_url)
+            print(f'[DEBUG] Next URL: {current_url}')
+            current_url_response = requests.get(current_url)
+        except Exception as e:
+            print(f'[DEBUG] Error: {e}')
+            continue
 
     print(wiki_nodes_df)
     print(wiki_edges_df)
